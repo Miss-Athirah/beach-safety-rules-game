@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beach Safety Rules - Kids Interactive Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        beach: {
+                            sky: '#38bdf8',
+                            ocean: '#0284c7',
+                            sand: '#fef08a',
+                            deepSand: '#fde047',
+                            coral: '#f43f5e',
+                            palm: '#15803d',
+                            amber: '#d97706'
+                        }
+                    },
+                    fontFamily: {
+                        story: ['Fredoka', 'sans-serif'],
+                        body: ['Quicksand', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(180deg, #38bdf8 0%, #0284c7 35%, #0369a1 60%, #eab308 100%);
+            background-attachment: fixed;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .beach-border {
+            border: 6px solid #d97706;
+            box-shadow: inset 0 0 15px rgba(254, 240, 138, 0.5), 0 10px 25px rgba(0,0,0,0.25);
+            background: #fffdf0;
+        }
+
+        .gold-badge {
+            background: radial-gradient(circle at 30% 30%, #fef08a, #ca8a04);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .card-pop {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .card-pop:hover {
+            transform: translateY(-6px) scale(1.02);
+        }
+
+        .card-pop:active {
+            transform: translateY(2px) scale(0.98);
+        }
+
+        @keyframes floatGently {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+
+        @keyframes waveMotion {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-15px); }
+        }
+
+        .animate-float {
+            animation: floatGently 3s ease-in-out infinite;
+        }
+
+        .animate-wave {
+            animation: waveMotion 4s ease-in-out infinite;
+        }
+
+        .certificate-frame {
+            border: 12px solid #0284c7;
+            outline: 6px dashed #f59e0b;
+            outline-offset: -10px;
+            background: #ffffff;
+        }
+
+        .confetti-particle {
+            position: absolute;
+            pointer-events: none;
+            animation: dropConfetti 3.5s linear forwards;
+        }
+
+        @keyframes dropConfetti {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden text-slate-800">
+
+    <header class="w-full bg-beach-ocean text-white p-3 md:p-4 shadow-xl sticky top-0 z-50 border-b-4 border-yellow-300">
+        <div class="max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-yellow-200 flex items-center justify-center border-2 border-amber-400 shadow-md text-2xl animate-float">
+                    🏖️
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-wide text-yellow-300 drop-shadow">
+                        Beach Safety Rules
+                    </h1>
+                    <p class="text-xs text-sky-100 font-medium hidden sm:block">Interactive Learning Game</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 ml-auto">
+                <div class="bg-amber-100 text-amber-900 px-4 py-1.5 rounded-full font-bold flex items-center gap-2 border-2 border-amber-400 shadow-inner">
+                    <span class="text-2xl">⭐</span>
+                    <span id="game-score" class="text-xl font-bold text-amber-800">0</span>
+                </div>
+
+                <button id="tts-btn" onclick="toggleVoice()" class="bg-yellow-400 hover:bg-yellow-300 text-yellow-950 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-md transition transform hover:scale-105" title="Voice Read Aloud">
+                    <i id="tts-icon" class="fas fa-volume-high"></i>
+                </button>
+
+                <button id="sfx-btn" onclick="toggleSFX()" class="bg-emerald-500 hover:bg-emerald-400 text-white w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-md transition transform hover:scale-105" title="Sound Effects">
+                    <i id="sfx-icon" class="fas fa-music"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto w-full p-3 md:p-6 flex-1 flex flex-col justify-start gap-4">
+
+        <div id="progress-bar-container" class="bg-sky-950/70 backdrop-blur-md p-3 rounded-2xl border-2 border-sky-400/50 text-white flex justify-between items-center gap-2 shadow-lg">
+            <div class="flex items-center gap-2 w-full max-w-xs sm:max-w-md">
+                <span id="level-indicator" class="text-xs font-bold bg-yellow-400 text-yellow-950 px-3 py-1 rounded-full whitespace-nowrap">Level 1/3</span>
+                <div class="w-full bg-sky-900 rounded-full h-3.5 border border-sky-700 overflow-hidden">
+                    <div id="level-progress-fill" class="bg-gradient-to-r from-yellow-400 to-amber-500 h-full w-1/3 transition-all duration-500"></div>
+                </div>
+            </div>
+            <button onclick="resetCurrentLevel()" class="text-xs bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-xl font-bold shadow transition flex items-center gap-1">
+                <i class="fas fa-rotate-right"></i> Restart
+            </button>
+        </div>
+
+        <section id="game-card" class="beach-border rounded-3xl p-4 md:p-8 shadow-2xl relative min-h-[480px] flex flex-col justify-between">
+            <div id="level-screen-content" class="w-full flex flex-col items-center">
+                <!-- Injected dynamically by JS -->
+            </div>
+
+            <div id="bottom-action-bar" class="w-full mt-6 pt-4 border-t-2 border-amber-200 flex justify-between items-center">
+                <button id="read-instruction-btn" onclick="speakCurrentInstruction()" class="bg-sky-500 hover:bg-sky-600 text-white text-xs sm:text-sm px-4 py-2 rounded-xl font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-comment-dots text-base"></i> Read Question
+                </button>
+                <div id="feedback-message" class="text-center font-bold text-sm sm:text-base text-amber-900 px-2"></div>
+                <button id="next-level-btn" onclick="nextLevel()" class="hidden bg-emerald-500 hover:bg-emerald-600 text-white text-sm sm:text-base px-6 py-2.5 rounded-xl font-bold shadow-lg transition transform hover:scale-105 flex items-center gap-2 animate-float">
+                    Next Level <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="reward-screen" class="hidden beach-border rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
+            <div id="confetti-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+
+            <div class="text-5xl md:text-6xl mb-2 animate-float">🏖️ 🏆 ☀️</div>
+            <h2 class="text-3xl md:text-4xl font-extrabold text-beach-ocean mb-1">Awesome Job!</h2>
+            <p class="text-slate-700 text-base md:text-lg font-semibold mb-4">You are now a certified Beach Safety Expert!</p>
+
+            <div class="flex justify-center items-center gap-2 mb-6" id="star-rating-display"></div>
+
+            <div class="w-full max-w-md bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 shadow-sm mb-6 flex flex-col gap-2">
+                <label for="student-name-input" class="text-sm font-bold text-amber-900">Enter Pupil's Name for Certificate:</label>
+                <div class="flex gap-2">
+                    <input type="text" id="student-name-input" placeholder="e.g. Alex Smith" class="flex-1 px-4 py-2 rounded-xl border-2 border-amber-400 focus:outline-none focus:border-sky-500 font-bold text-slate-800 text-center">
+                    <button onclick="updateCertificateName()" class="bg-beach-ocean hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-xl transition shadow">
+                        Generate
+                    </button>
+                </div>
+            </div>
+
+            <div id="certificate-print-area" class="certificate-frame rounded-2xl p-6 md:p-8 w-full max-w-2xl shadow-xl relative my-2 text-center">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-3xl">🌴</span>
+                    <span class="text-xs uppercase tracking-widest text-beach-ocean font-bold">Beach Safety Official Award</span>
+                    <span class="text-3xl">🌴</span>
+                </div>
+
+                <h3 class="text-2xl md:text-3xl font-extrabold text-beach-ocean mb-2 uppercase tracking-wide">
+                    Certificate of Safety Achievement
+                </h3>
+                <p class="text-xs md:text-sm text-slate-600 font-bold">This certificate is proudly presented to:</p>
+
+                <div id="certificate-pupil-name" class="text-3xl md:text-4xl font-extrabold text-amber-700 my-4 underline decoration-yellow-400 underline-offset-8">
+                    Little Learner
+                </div>
+
+                <p class="text-xs md:text-sm text-slate-700 font-semibold max-w-md mx-auto mb-4">
+                    For successfully demonstrating excellent knowledge in <br>
+                    <span class="text-beach-ocean font-bold">"Beach Safety Rules & Guidelines"</span>!
+                </p>
+
+                <div class="flex justify-between items-end mt-6 pt-4 border-t-2 border-amber-200 text-left">
+                    <div>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase">Date</p>
+                        <p id="cert-date" class="text-xs font-bold text-slate-800">October 2026</p>
+                    </div>
+                    <div class="gold-badge w-14 h-14 rounded-full border-2 border-yellow-700 flex items-center justify-center text-2xl shadow">
+                        🏅
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase">Score Achieved</p>
+                        <p id="cert-score-display" class="text-xs font-bold text-amber-900">100 Stars</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4 mt-6">
+                <button onclick="printCertificate()" class="bg-yellow-500 hover:bg-yellow-400 text-yellow-950 px-6 py-3 rounded-2xl font-bold shadow-lg transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> Print / Save Certificate
+                </button>
+                <button onclick="restartGameFromBeginning()" class="bg-beach-ocean hover:bg-sky-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg transition flex items-center gap-2">
+                    <i class="fas fa-rotate-left"></i> Play Again
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="w-full bg-sky-950 text-sky-100 text-center py-3 text-xs border-t-4 border-yellow-300 mt-6">
+        <p class="font-bold">Beach Safety Rules &copy; Interactive Learning Game for Young Learners</p>
+    </footer>
+
+    <script>
+        // Data Structures
+        const LEVEL1_DATA = [
+            { id: 'floats', word: 'floats', icon: '🛟', color: 'bg-red-100 border-red-400 text-red-800' },
+            { id: 'jellyfish', word: 'jellyfish', icon: '🪼', color: 'bg-purple-100 border-purple-400 text-purple-800' },
+            { id: 'sunburn', word: 'sunburn', icon: '🥵', color: 'bg-orange-100 border-orange-400 text-orange-800' },
+            { id: 'sunscreen', word: 'sunscreen', icon: '🧴', color: 'bg-sky-100 border-sky-400 text-sky-800' },
+            { id: 'sunglasses', word: 'sunglasses', icon: '😎', color: 'bg-yellow-100 border-yellow-400 text-yellow-800' }
+        ];
+
+        const LEVEL2_DATA = [
+            { id: 1, text: "You _______________ put on sunscreen before going under the sun.", answer: "should" },
+            { id: 2, text: "You _______________ swim in the sea when there are jellyfish.", answer: "shouldn't" },
+            { id: 3, text: "You _______________ wear sunglasses to protect your eyes.", answer: "should" },
+            { id: 4, text: "You _______________ wear floats if you cannot swim well.", answer: "should" },
+            { id: 5, text: "You _______________ stay in the hot sun for too long because you will get sunburn.", answer: "shouldn't" },
+            { id: 6, text: "You _______________ drink plenty of water on a hot day.", answer: "should" }
+        ];
+
+        const LEVEL3_DATA = [
+            {
+                question: "🌊 🪼 There are jellyfish in the sea. Should Ali swim?",
+                options: ["Yes, he should.", "No, he shouldn't.", "No, she shouldn't."],
+                correct: "No, he shouldn't."
+            },
+            {
+                question: "☀️ 🧴 Aina wants to play on the beach. Should she put on sunscreen?",
+                options: ["Yes, she should.", "Yes, she shouldn't.", "No, she shouldn't."],
+                correct: "Yes, she should."
+            },
+            {
+                question: "🛟 🏊 Farid cannot swim. Should he wear floats in the water?",
+                options: ["Yes, she should.", "Yes, he should.", "No, he shouldn't."],
+                correct: "Yes, he should."
+            },
+            {
+                question: "🥵 🏖️ Siti has a bad sunburn. Should she sit under the hot sun?",
+                options: ["Yes, she should.", "No, she shouldn't.", "No, she should."],
+                correct: "No, she shouldn't."
+            },
+            {
+                question: "😎 The sun is very bright. Should Imran and Haziq wear sunglasses?",
+                options: ["Yes, he should.", "Yes, they should.", "No, they shouldn't."],
+                correct: "Yes, they should."
+            }
+        ];
+
+        // State Tracking Variables
+        let currentLevel = 1;
+        let totalScore = 0;
+        let voiceEnabled = true;
+        let sfxEnabled = true;
+
+        let l1Matches = {};
+        let selectedL1Word = null;
+
+        let l2Index = 0;
+        let l3Index = 0;
+
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playSound(type) {
+            if (!sfxEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                const now = ctx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+                    osc.start(now);
+                    osc.stop(now + 0.45);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(150, now + 0.12);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'pop') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(350, now);
+                    osc.frequency.exponentialRampToValueAtTime(700, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'fanfare') {
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, i) => {
+                        const noteOsc = ctx.createOscillator();
+                        const noteGain = ctx.createGain();
+                        noteOsc.type = 'sine';
+                        noteOsc.frequency.setValueAtTime(freq, now + i * 0.08);
+                        noteGain.gain.setValueAtTime(0.2, now + i * 0.08);
+                        noteGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.3);
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(ctx.destination);
+                        noteOsc.start(now + i * 0.08);
+                        noteOsc.stop(now + i * 0.08 + 0.3);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        // Text-to-Speech synth
+        function speakText(text) {
+            if (!voiceEnabled || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const cleanText = text.replace(/[🛟🪼🥵🧴😎🌊☀️🏊🏖️]/g, '');
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.05;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function toggleVoice() {
+            voiceEnabled = !voiceEnabled;
+            const icon = document.getElementById('tts-icon');
+            if (voiceEnabled) {
+                icon.className = 'fas fa-volume-high';
+                speakText("Read aloud enabled!");
+            } else {
+                icon.className = 'fas fa-volume-xmark';
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function toggleSFX() {
+            sfxEnabled = !sfxEnabled;
+            const icon = document.getElementById('sfx-icon');
+            if (sfxEnabled) {
+                icon.className = 'fas fa-music';
+                playSound('pop');
+            } else {
+                icon.className = 'fas fa-volume-off';
+            }
+        }
+
+        function adjustScore(points) {
+            totalScore += points;
+            if (totalScore < 0) totalScore = 0;
+            document.getElementById('game-score').textContent = totalScore;
+        }
+
+        function updateProgressBar() {
+            document.getElementById('level-indicator').textContent = `Level ${currentLevel}/3`;
+            const fillPct = (currentLevel / 3) * 100;
+            document.getElementById('level-progress-fill').style.width = `${fillPct}%`;
+        }
+
+        function setFeedback(msg, isError = false) {
+            const fb = document.getElementById('feedback-message');
+            fb.textContent = msg;
+            if (isError) {
+                fb.className = "text-center font-bold text-sm sm:text-base text-rose-600 px-2 animate-bounce";
+            } else {
+                fb.className = "text-center font-bold text-sm sm:text-base text-emerald-700 px-2";
+            }
+        }
+
+        function renderLevel1() {
+            setFeedback("Tap a word on the left, then tap its matching picture!");
+            document.getElementById('next-level-btn').classList.add('hidden');
+            l1Matches = {};
+            selectedL1Word = null;
+
+            const shuffledWords = [...LEVEL1_DATA].sort(() => 0.5 - Math.random());
+            const shuffledCards = [...LEVEL1_DATA].sort(() => 0.5 - Math.random());
+
+            const html = `
+                <div class="text-center mb-4">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-beach-ocean">Level 1: Match Words with Pictures</h2>
+                    <p class="text-xs sm:text-sm text-amber-900 font-bold">Match each beach word to the correct image card!</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
+                    <div class="flex flex-col gap-2.5 justify-center">
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-amber-800 text-center">Beach Words</span>
+                        ${shuffledWords.map(item => `
+                            <button id="l1-word-${item.id}" onclick="selectL1Word('${item.id}')" 
+                                class="l1-word-btn card-pop bg-white hover:bg-amber-100 border-3 border-amber-400 text-amber-950 text-base sm:text-lg font-extrabold py-2.5 px-4 rounded-2xl shadow flex items-center justify-between transition">
+                                <span>${item.word}</span>
+                                <i id="l1-check-${item.id}" class="fas fa-circle text-amber-300 text-lg"></i>
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-3">
+                        ${shuffledCards.map(item => `
+                            <div id="l1-card-${item.id}" onclick="matchL1Card('${item.id}')" 
+                                class="card-pop bg-white border-4 border-amber-300 hover:border-beach-ocean rounded-2xl p-3 flex flex-col items-center justify-center cursor-pointer shadow-md transition text-center min-h-[110px]">
+                                <span class="text-4xl md:text-5xl mb-1">${item.icon}</span>
+                                <span id="l1-label-${item.id}" class="text-xs font-bold text-slate-400">???</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('level-screen-content').innerHTML = html;
+            speakText("Level 1: Match Words with Pictures. Tap a word on the left, then tap its matching picture card!");
+        }
+
+        function selectL1Word(wordId) {
+            playSound('pop');
+            if (l1Matches[wordId]) return;
+
+            document.querySelectorAll('.l1-word-btn').forEach(btn => btn.classList.remove('ring-4', 'ring-beach-ocean', 'bg-yellow-100'));
+
+            selectedL1Word = wordId;
+            const btn = document.getElementById(`l1-word-${wordId}`);
+            btn.classList.add('ring-4', 'ring-beach-ocean', 'bg-yellow-100');
+
+            const item = LEVEL1_DATA.find(i => i.id === wordId);
+            speakText(item.word);
+            setFeedback(`Selected "${item.word}". Now tap the matching picture!`);
+        }
+
+        function matchL1Card(cardId) {
+            if (!selectedL1Word) {
+                playSound('wrong');
+                setFeedback("Please select a word on the left first!", true);
+                speakText("Select a word on the left first!");
+                return;
+            }
+
+            if (selectedL1Word === cardId) {
+                playSound('correct');
+                adjustScore(10);
+                l1Matches[cardId] = true;
+
+                const item = LEVEL1_DATA.find(i => i.id === cardId);
+
+                const wordBtn = document.getElementById(`l1-word-${cardId}`);
+                wordBtn.className = "bg-emerald-100 border-3 border-emerald-500 text-emerald-900 text-base sm:text-lg font-extrabold py-2.5 px-4 rounded-2xl shadow flex items-center justify-between cursor-default";
+                document.getElementById(`l1-check-${cardId}`).className = "fas fa-circle-check text-emerald-600 text-xl";
+
+                const card = document.getElementById(`l1-card-${cardId}`);
+                card.className = "bg-emerald-50 border-4 border-emerald-500 rounded-2xl p-3 flex flex-col items-center justify-center shadow text-center cursor-default";
+                document.getElementById(`l1-label-${cardId}`).textContent = item.word;
+                document.getElementById(`l1-label-${cardId}`).className = "text-xs font-extrabold text-emerald-800";
+
+                selectedL1Word = null;
+                setFeedback(`Correct! That is ${item.word}! +10 pts`);
+                speakText(`Great! That is ${item.word}!`);
+
+                if (Object.keys(l1Matches).length === LEVEL1_DATA.length) {
+                    setTimeout(() => {
+                        playSound('fanfare');
+                        setFeedback("Awesome! Level 1 Completed! 🎉");
+                        speakText("Awesome! You completed Level 1!");
+                        document.getElementById('next-level-btn').classList.remove('hidden');
+                    }, 500);
+                }
+            } else {
+                playSound('wrong');
+                adjustScore(-5);
+                setFeedback("Oops! That picture doesn't match. -5 pts. Try again!", true);
+                speakText("Oops! Try again!");
+            }
+        }
+
+        function renderLevel2() {
+            l2Index = 0;
+            displayL2Question();
+        }
+
+        function displayL2Question() {
+            document.getElementById('next-level-btn').classList.add('hidden');
+            const item = LEVEL2_DATA[l2Index];
+
+            const html = `
+                <div class="text-center mb-4">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-beach-ocean">Level 2: Beach Safety Rules</h2>
+                    <p class="text-xs sm:text-sm text-amber-900 font-bold">Complete the rule using "should" or "shouldn't"! (${l2Index + 1}/6)</p>
+                </div>
+
+                <div class="w-full max-w-xl bg-white border-4 border-amber-300 rounded-3xl p-6 shadow-xl flex flex-col items-center gap-6 my-2">
+                    <div class="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-3xl shadow-inner border-2 border-amber-300">
+                        🏖️
+                    </div>
+
+                    <div class="text-xl sm:text-2xl font-extrabold text-slate-800 text-center leading-relaxed">
+                        "${item.text}"
+                    </div>
+
+                    <div class="flex justify-center gap-4 sm:gap-6 w-full max-w-md mt-2">
+                        <button onclick="answerL2('should')" class="card-pop flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xl py-3.5 rounded-2xl shadow-lg border-b-4 border-emerald-700 flex items-center justify-center gap-2">
+                            👍 should
+                        </button>
+                        <button onclick="answerL2('shouldn\\'t')" class="card-pop flex-1 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xl py-3.5 rounded-2xl shadow-lg border-b-4 border-rose-700 flex items-center justify-center gap-2">
+                            👎 shouldn't
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('level-screen-content').innerHTML = html;
+            setFeedback(`Rule ${l2Index + 1} of 6`);
+            speakText(item.text.replace("_______________", "blank"));
+        }
+
+        function answerL2(choice) {
+            const item = LEVEL2_DATA[l2Index];
+
+            if (choice === item.answer) {
+                playSound('correct');
+                adjustScore(10);
+                setFeedback(`Correct! You ${item.answer}! +10 pts ⭐`);
+                speakText(`Correct! You ${item.answer}!`);
+
+                l2Index++;
+                if (l2Index < LEVEL2_DATA.length) {
+                    setTimeout(() => displayL2Question(), 1200);
+                } else {
+                    setTimeout(() => {
+                        playSound('fanfare');
+                        setFeedback("Fantastic! You completed Level 2! 🎉");
+                        speakText("Fantastic! You completed Level 2!");
+                        document.getElementById('next-level-btn').classList.remove('hidden');
+                    }, 800);
+                }
+            } else {
+                playSound('wrong');
+                adjustScore(-5);
+                setFeedback("Not quite right! -5 pts. Read carefully and try again!", true);
+                speakText("Not quite right! Try again!");
+            }
+        }
+
+        function renderLevel3() {
+            l3Index = 0;
+            displayL3Question();
+        }
+
+        function displayL3Question() {
+            document.getElementById('next-level-btn').classList.add('hidden');
+            const item = LEVEL3_DATA[l3Index];
+
+            const html = `
+                <div class="text-center mb-4">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-beach-ocean">Level 3: Look and Answer</h2>
+                    <p class="text-xs sm:text-sm text-amber-900 font-bold">Read the situation and choose the correct answer! (${l3Index + 1}/5)</p>
+                </div>
+
+                <div class="w-full max-w-xl bg-white border-4 border-amber-300 rounded-3xl p-6 shadow-xl flex flex-col items-center gap-5 my-2">
+                    <div class="text-xl sm:text-2xl font-extrabold text-slate-800 text-center leading-snug">
+                        ${item.question}
+                    </div>
+
+                    <div class="flex flex-col gap-3 w-full mt-2">
+                        ${item.options.map(opt => `
+                            <button onclick="answerL3('${opt.replace(/'/g, "\\'")}')" class="card-pop bg-sky-50 hover:bg-amber-100 border-3 border-sky-300 hover:border-amber-400 text-amber-950 text-base sm:text-lg font-extrabold py-3 px-4 rounded-2xl shadow transition text-center">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('level-screen-content').innerHTML = html;
+            setFeedback(`Question ${l3Index + 1} of 5`);
+            speakText(item.question);
+        }
+
+        function answerL3(selectedOpt) {
+            const item = LEVEL3_DATA[l3Index];
+
+            if (selectedOpt === item.correct) {
+                playSound('correct');
+                adjustScore(10);
+                setFeedback("Super! That is correct! +10 pts ⭐");
+                speakText("Super! That is correct!");
+
+                l3Index++;
+                if (l3Index < LEVEL3_DATA.length) {
+                    setTimeout(() => displayL3Question(), 1200);
+                } else {
+                    setTimeout(() => {
+                        playSound('fanfare');
+                        setFeedback("Hooray! All levels completed! 🏆");
+                        speakText("Hooray! You completed all Beach Safety levels!");
+                        document.getElementById('next-level-btn').classList.remove('hidden');
+                        document.getElementById('next-level-btn').innerHTML = `View Reward Certificate <i class="fas fa-trophy ml-1"></i>`;
+                    }, 800);
+                }
+            } else {
+                playSound('wrong');
+                adjustScore(-5);
+                setFeedback("Oops! That's not correct. -5 pts. Try again!", true);
+                speakText("Try again!");
+            }
+        }
+
+        function nextLevel() {
+            playSound('pop');
+            if (currentLevel < 3) {
+                currentLevel++;
+                updateProgressBar();
+                if (currentLevel === 2) renderLevel2();
+                else if (currentLevel === 3) renderLevel3();
+            } else {
+                showRewardScreen();
+            }
+        }
+
+        function resetCurrentLevel() {
+            playSound('pop');
+            if (currentLevel === 1) renderLevel1();
+            else if (currentLevel === 2) renderLevel2();
+            else if (currentLevel === 3) renderLevel3();
+        }
+
+        function speakCurrentInstruction() {
+            const fb = document.getElementById('feedback-message').textContent;
+            if (fb) speakText(fb);
+        }
+
+        function showRewardScreen() {
+            playSound('fanfare');
+            document.getElementById('progress-bar-container').classList.add('hidden');
+            document.getElementById('game-card').classList.add('hidden');
+            document.getElementById('reward-screen').classList.remove('hidden');
+
+            const confettiContainer = document.getElementById('confetti-container');
+            confettiContainer.innerHTML = '';
+            const colors = ['#0284c7', '#f59e0b', '#10b981', '#f43f5e', '#38bdf8'];
+            for (let i = 0; i < 45; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'confetti-particle';
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.width = `${Math.random() * 12 + 6}px`;
+                particle.style.height = `${Math.random() * 12 + 6}px`;
+                particle.style.borderRadius = '50%';
+                particle.style.animationDuration = `${Math.random() * 2 + 2}s`;
+                particle.style.animationDelay = `${Math.random() * 1}s`;
+                confettiContainer.appendChild(particle);
+            }
+
+            const starContainer = document.getElementById('star-rating-display');
+            let starHtml = '';
+            const starsEarned = totalScore >= 120 ? 3 : totalScore >= 80 ? 2 : 1;
+            for (let i = 0; i < 3; i++) {
+                if (i < starsEarned) {
+                    starHtml += `<span class="text-5xl text-yellow-400 animate-float">⭐</span>`;
+                } else {
+                    starHtml += `<span class="text-5xl text-slate-300">⭐</span>`;
+                }
+            }
+            starContainer.innerHTML = starHtml;
+
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('cert-date').textContent = dateStr;
+            document.getElementById('cert-score-display').textContent = `${totalScore} Stars Earned`;
+
+            speakText("Congratulations! You are a Beach Safety Expert! Enter your name for your certificate!");
+        }
+
+        function updateCertificateName() {
+            const nameInput = document.getElementById('student-name-input').value.trim();
+            if (nameInput) {
+                playSound('correct');
+                document.getElementById('certificate-pupil-name').textContent = nameInput;
+                speakText(`Certificate generated for ${nameInput}!`);
+            } else {
+                playSound('wrong');
+                speakText("Please type a name first!");
+            }
+        }
+
+        function printCertificate() {
+            playSound('pop');
+            window.print();
+        }
+
+        function restartGameFromBeginning() {
+            playSound('pop');
+            currentLevel = 1;
+            totalScore = 0;
+            document.getElementById('game-score').textContent = "0";
+
+            document.getElementById('reward-screen').classList.add('hidden');
+            document.getElementById('progress-bar-container').classList.remove('hidden');
+            document.getElementById('game-card').classList.remove('hidden');
+
+            updateProgressBar();
+            renderLevel1();
+        }
+
+        // Initialize game execution
+        window.onload = function() {
+            updateProgressBar();
+            renderLevel1();
+        };
+    </script>
+</body>
+</html>
